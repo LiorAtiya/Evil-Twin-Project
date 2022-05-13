@@ -1,0 +1,2 @@
+rmmod r8188eu.ko
+modprobe 8188eu
