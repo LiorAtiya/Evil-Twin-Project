@@ -4,8 +4,6 @@ import os
 import time
 
 import fakeAP as f_ap
-import CreateConf as cc
-import MonitorMode as mm
 
 # globals variables
 detected = False  # found an attampet to attack
