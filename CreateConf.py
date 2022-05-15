@@ -3,7 +3,7 @@ import os
 def Create_hostapd(iface, ssid="Free wifi", channel=1):
     interface_str= "interface="+str(iface)+"\n"
     driver_str="driver=nl80211\n"
-    ssid_str= "ssid="+"LiorFakeAP"+"\n"
+    ssid_str= "ssid="+str(ssid)+"\n"
     channel_str = "channel="+str(channel)+" \n"
     conf_str= interface_str+driver_str+ssid_str+channel_str
     f = open("hostapd.conf", "w+")
