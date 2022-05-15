@@ -1,13 +1,13 @@
 import os
 
-def Change_to_MonitorMode_airmon(iface):
-    #Checks which components are working on the wireless network - and kills their processes
-    os.system("sudo airmon-ng check kill")
-    os.system("sudo airmon-ng start "+ iface)
-    os.system("clear")
-    os.system("iwconfig")
+# def Change_to_MonitorMode_airmon(iface):
+#     #Checks which components are working on the wireless network - and kills their processes
+#     os.system("sudo airmon-ng check kill")
+#     os.system("sudo airmon-ng start "+ iface)
+#     os.system("clear")
+#     os.system("iwconfig")
    
-    return iface
+#     return iface
 
 def Change_back_airmon(iface):
     os.system("sudo airmon-ng stop "+ iface)
