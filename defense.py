@@ -54,27 +54,35 @@ def setChannel(channel):
     os.system('iwconfig %s channel %d' % (network_adapter, channel))
 
 # activates the defense mode to prevent an Evil Twin attack
+
+
 def activateDefenseMode():
     switchToMonitorMode()
     # scanning for APs
     WLANScaning()
-    network_index = input("Please enter the index of the newtork you want to protect: ")
+    network_index = input(
+        "Please enter the index of the newtork you want to protect: ")
     print("Defense against the Evil Twin has been activated")
     # stores the ssid of the network
     ssid_to_protect = ap_list[network_index][1]
     # stores the original mac adress of the network
     original_mac_to_protect = ap_list[network_index][0]
-    # clears the AP's list
-    del ap_list[:]
-    print("Scanning for fake APs")
-    WLANScaning()
-    # how many APs have been found
-    num_of_found_APs = len(ap_list)
-    if num_of_found_APs > 1:
-        while True:
-            checkForImposters(num_of_found_APs, ssid_to_protect, original_mac_to_protect)
+    while True:
+        # clears the AP's list
+        del ap_list[:]
+        print("Scanning for fake APs")
+        WLANScaning()
+        # how many APs have been found
+        num_of_found_APs = len(ap_list)
+        if num_of_found_APs > 1:
+            checkForImposters(num_of_found_APs, ssid_to_protect,
+                              original_mac_to_protect)
+        else:
+            print("No threats were found")
 
 # The function checks if there is any AP with the same ssid but with other mac address
+
+
 def checkForImposters(num_of_found_APs, ssid_to_protect, original_mac_to_protect):
     global detected
     global imposters_dict
@@ -96,6 +104,8 @@ def checkForImposters(num_of_found_APs, ssid_to_protect, original_mac_to_protect
         ironDome()
 
 # The function attacks all the imposters to disonnect thier AP
+
+
 def ironDome():
     # itterates over all the imposters
     for mac_of_target_AP, channel_of_target_AP in imposters_dict.items():
