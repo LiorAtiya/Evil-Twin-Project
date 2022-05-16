@@ -4,6 +4,7 @@ import os
 import time
 
 import fakeAP as fake_ap
+import defense as defense
 
 # Preparing the card for monitor mode
 def switchToMonitorMode(sniff_network_adapter):
@@ -148,8 +149,8 @@ def reset_network(iface):
 
 if __name__ == "__main__":
     os.system("iwconfig")  # show the list of wlan
-    sniff_network_adapter = input("Enter your network adapter for sniff packets (wlan0/wlan1): ")
-    fakeAP_network_adapter = input("Enter your network adapter for setup fake AP (wlan0/wlan1): ")
+    sniff_network_adapter = input("Enter your network adapter for sniff packets: ")
+    fakeAP_network_adapter = input("Enter your network adapter for setup fake AP: ")
     
     switchToMonitorMode(sniff_network_adapter)
     
@@ -167,8 +168,8 @@ if __name__ == "__main__":
         finish = input('--------Press Enter to stop FakeAP--------\n')
         save_info_users()
     
-    elif choise == 2:
-        print("defence")
+    elif int(choise) == 2:
+        defense.activateDefenseMode(sniff_network_adapter)
     else:
         choise = input("Choose option: ")
         
