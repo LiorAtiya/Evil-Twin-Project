@@ -14,4 +14,21 @@ This type of attack may be used to steal the passwords of unsuspecting users, ei
 4. Selecting a victim and performing an Evil-Twin attack.
 
 Evil-Twin attack includes:<br>
-Disconnecting the victim from the existing network, uploading the malicious network (the evil twin) and activating CaptivePortal, connecting the victim to the malicious network and its activities, obtaining the information that is the purpose of the attack
+Disconnecting the victim from the existing network, uploading the malicious network (the evil twin) and activating CaptivePortal, connecting the victim to the malicious network and its activities, obtaining the information that is the purpose of the attack.
+
+In addition, there is a defense tool that detects the existence of an attack on the victim and prevents the success of the attack.
+
+## Requirements
+1. Two wireless network adapters (One for attack and the other for setup fake ap).
+2. Linux enviorment (kali / Ubunto).
+3. Install python3 and libraries: dnsmasq, hostapd, scapy.
+4. Copy html file from project to path in your OS: /var/www
+
+## How to run the project
+1. Choose file in your computer and run in terminal: "git clone https://github.com/LiorAtiya/Evil-Twin-Project.git"
+2. run: "python3 main.py"
+3. Set your interfaces (network adapters).
+4. Choose 1 to launch the Evil Twin attack or choose 2 to activate the defense mode.
+
+## Running example
+
