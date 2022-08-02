@@ -36,7 +36,7 @@ def PacketHandlerAP(packet):
 def WLANScaning():
     global network_adapter
     print("Scanning for access points...")
-    # Scan for 2 minutes
+    # Scan for 30 sec
     sniff(iface=network_adapter, prn=PacketHandlerAP, timeout=30)
     num = len(ap_list)
     for x in range(num):
@@ -46,7 +46,7 @@ def WLANScaning():
 def fakeAPsScanning():
     global network_adapter
     print("Scanning for access points...")
-    # Scan for 2 minutes
+    # Scan for 30 sec
     sniff(iface=network_adapter, prn=PacketHandlerAP, timeout=30)
     num = len(ap_list)
     for x in range(num):
@@ -103,7 +103,7 @@ def checkForImposters(num_of_found_APs, ssid_to_protect, original_mac_to_protect
 
     # call to the iron dome function if any imposter was found
     if detected == True:
-        # elimiate all the imposters
+        # eliminate all the imposters
         time.sleep(4)
         ironDome()
     else:
